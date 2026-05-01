@@ -15,5 +15,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  wiremock:
+    image: wiremock/wiremock:3.13.1
+    container_name: carddelivery-wiremock
+    volumes:
+      - ./wiremock:/home/wiremock
+    ports:
+      - "8081:8080"
+    command: [ "--global-response-templating", "--verbose" ]
 volumes:
   postgres_data:
