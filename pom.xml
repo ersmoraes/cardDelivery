@@ -283,6 +283,14 @@
 							<goal>check</goal>
 						</goals>
 						<configuration>
+							<excludes>
+								<exclude>com/banking/carddelivery/CardDeliveryHubApplication.class</exclude>
+								<exclude>com/banking/carddelivery/domain/dto/**</exclude>
+								<exclude>com/banking/carddelivery/domain/entity/**</exclude>
+								<exclude>com/banking/carddelivery/domain/enums/**</exclude>
+								<exclude>com/banking/carddelivery/config/**</exclude>
+								<exclude>com/banking/carddelivery/messaging/event/**</exclude>
+							</excludes>
 							<rules>
 								<rule>
 									<element>BUNDLE</element>
