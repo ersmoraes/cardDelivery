@@ -1,6 +1,6 @@
 CREATE TABLE regiao_atendimento (
     id              BIGSERIAL    PRIMARY KEY,
-    uf              CHAR(2)      NOT NULL,
+    uf              VARCHAR(2)   NOT NULL,
     cep_inicio      VARCHAR(8)   NOT NULL,
     cep_fim         VARCHAR(8)   NOT NULL,
     perfil_risco    VARCHAR(10)  NOT NULL,
