@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/ws/88888888/json/"
+  },
+  "response": {
+    "status": 200,
+    "fixedDelayMilliseconds": 5000,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "cep": "88888-888",
+      "logradouro": "Rua Lenta",
+      "bairro": "Timeout",
+      "localidade": "Lentópolis",
+      "uf": "SC"
+    }
+  }
+}

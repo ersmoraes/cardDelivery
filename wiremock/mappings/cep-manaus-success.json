@@ -1,0 +1,24 @@
+{
+    "request": {
+    "method": "GET",
+        "url": "/ws/69900000/json/"
+},
+    "response": {
+    "status": 200,
+        "headers": {
+        "Content-Type": "application/json"
+    },
+    "jsonBody": {
+        "cep": "69900-000",
+            "logradouro": "Rua das Palmeiras",
+            "complemento": "",
+            "bairro": "Centro",
+            "localidade": "Manaus",
+            "uf": "AM",
+            "ibge": "1302603",
+            "gia": "",
+            "ddd": "92",
+            "siafi": "0255"
+    }
+}
+}

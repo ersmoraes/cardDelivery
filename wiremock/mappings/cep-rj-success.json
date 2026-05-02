@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/ws/20040020/json/"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "cep": "20040-020",
+      "logradouro": "Avenida Rio Branco",
+      "complemento": "de 1 a 399 - lado ímpar",
+      "bairro": "Centro",
+      "localidade": "Rio de Janeiro",
+      "uf": "RJ",
+      "ibge": "3304557",
+      "gia": "",
+      "ddd": "21",
+      "siafi": "6001"
+    }
+  }
+}
