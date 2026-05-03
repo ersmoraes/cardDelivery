@@ -65,7 +65,7 @@ public class DeliveryEvaluationServiceImpl implements DeliveryEvaluationService 
         DeliveryEvaluationResponse response = evaluators.stream()
                 .filter(e -> e.aplicaPara(request.getCardType(), regiao))
                 .findFirst()
-                .map(e -> e.avaliar(request.getCep(), request.getCardType(), endereco, regiao))
+                .map(e -> e.avaliar(cepNormalizado, request.getCardType(), endereco, regiao))
                 .orElseThrow(() -> new IllegalStateException("Nenhum evaluator aplicável encontrado"));
 
         long tempoMs = System.currentTimeMillis() - inicio;

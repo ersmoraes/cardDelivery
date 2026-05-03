@@ -1,5 +1,6 @@
 package com.banking.carddelivery.publisher;
 
+import com.banking.carddelivery.exception.ServicoExternoIndisponivelException;
 import com.banking.carddelivery.messaging.event.DeliveryEvaluatedEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +48,7 @@ public class S3BackupPublisher implements BackupPublisher {
         } catch (Exception ex) {
             log.error("Falha ao publicar backup S3 para eventId={} key={}: {}",
                     event.getEventId(), key, ex.getMessage());
-            throw new RuntimeException("Falha ao publicar backup em S3", ex);
+            throw new ServicoExternoIndisponivelException("Falha ao publicar backup em S3", ex);
         }
     }
 

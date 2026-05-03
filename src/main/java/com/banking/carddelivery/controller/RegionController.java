@@ -55,8 +55,8 @@ public class RegionController {
                 .perfilRisco(dto.getPerfilRisco().name())
                 .prazoDias(dto.getPrazoDias())
                 .transportadora(dto.getTransportadora())
-                .permiteEntrega(dto.getPermiteEntrega() != null ? dto.getPermiteEntrega() : true)
-                .ativo(dto.getAtivo() != null ? dto.getAtivo() : true)
+                .permiteEntrega(!Boolean.FALSE.equals(dto.getPermiteEntrega()))
+                .ativo(!Boolean.FALSE.equals(dto.getAtivo()))
                 .build();
     }
 }

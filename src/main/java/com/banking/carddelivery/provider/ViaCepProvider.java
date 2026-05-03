@@ -50,13 +50,13 @@ public class ViaCepProvider implements CepProvider {
                 .build();
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("java:S1144")
     private EnderecoDTO fallback(String cep, WebClientResponseException ex) {
         log.warn("Serviço de CEP indisponível para CEP {}. Status: {}", cep, ex.getStatusCode());
         throw new ServicoExternoIndisponivelException("Serviço de CEP indisponível após tentativas: " + ex.getMessage());
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("java:S1144")
     private EnderecoDTO fallback(String cep, Exception ex) {
         log.warn("Serviço de CEP indisponível para CEP {}. Causa: {}", cep, ex.getMessage());
         throw new ServicoExternoIndisponivelException("Serviço de CEP indisponível: " + ex.getMessage());
