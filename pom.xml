@@ -29,7 +29,7 @@
 		<sonar.projectName>CardDeliveryHub</sonar.projectName>
 		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 		<sonar.exclusions>
-			**/CardDeliveryHubApplication.java,
+			**/CarddeliveryApplication.java,
 			**/domain/dto/**,
 			**/domain/entity/**,
 			**/domain/enums/**,
@@ -254,7 +254,7 @@
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<configuration>
 					<excludes>
-						<exclude>com/banking/carddelivery/CardDeliveryHubApplication.class</exclude>
+						<exclude>com/banking/carddelivery/CarddeliveryApplication.class</exclude>
 						<exclude>com/banking/carddelivery/domain/dto/**</exclude>
 						<exclude>com/banking/carddelivery/domain/entity/**</exclude>
 						<exclude>com/banking/carddelivery/domain/enums/**</exclude>
@@ -284,7 +284,7 @@
 						</goals>
 						<configuration>
 							<excludes>
-								<exclude>com/banking/carddelivery/CardDeliveryHubApplication.class</exclude>
+								<exclude>com/banking/carddelivery/CarddeliveryApplication.class</exclude>
 								<exclude>com/banking/carddelivery/domain/dto/**</exclude>
 								<exclude>com/banking/carddelivery/domain/entity/**</exclude>
 								<exclude>com/banking/carddelivery/domain/enums/**</exclude>
