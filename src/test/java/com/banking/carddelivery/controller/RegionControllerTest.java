@@ -4,6 +4,7 @@ import com.banking.carddelivery.domain.dto.RegionDTO;
 import com.banking.carddelivery.domain.entity.RegiaoAtendimento;
 import com.banking.carddelivery.domain.enums.PerfilRisco;
 import com.banking.carddelivery.repository.RegiaoAtendimentoRepository;
+import com.banking.carddelivery.service.audit.AuditWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ class RegionControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @MockBean private RegiaoAtendimentoRepository repository;
+    @MockBean private AuditWriter auditWriter;
 
     @Test
     void listAll_returns200WithPage() throws Exception {
