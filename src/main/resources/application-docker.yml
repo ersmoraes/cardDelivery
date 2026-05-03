@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:5432/carddelivery
+    username: app
+    password: app
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        acknowledge-mode: manual
+
+cep:
+  api:
+    url: ${CEP_API_URL:http://wiremock:8080}
+
+aws:
+  s3:
+    endpoint: ${AWS_ENDPOINT:http://localstack:4566}
+    region: us-east-1
+    bucket: carddelivery-audit
+    access-key: test
+    secret-key: test
+
+logging:
+  level:
+    com.banking.carddelivery: INFO
+    org.springframework.amqp: WARN
