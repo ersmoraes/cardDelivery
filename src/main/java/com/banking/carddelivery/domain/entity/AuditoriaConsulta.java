@@ -28,10 +28,10 @@ public class AuditoriaConsulta {
     @Column(name = "cep_consultado", nullable = false, length = 9)
     private String cepConsultado;
 
-    @Column(name = "customer_id", nullable = false, length = 20)
+    @Column(name = "customer_id", length = 20)
     private String customerId;
 
-    @Column(name = "card_type", nullable = false, length = 20)
+    @Column(name = "card_type", length = 20)
     private String cardType;
 
     @Column(name = "data_hora", nullable = false)

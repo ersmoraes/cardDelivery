@@ -19,13 +19,20 @@ public interface AuditoriaConsultaRepository extends JpaRepository<AuditoriaCons
 
     boolean existsByEventId(String eventId);
 
-    @Query("""
-            SELECT a FROM AuditoriaConsulta a
-                        WHERE (:customerId IS NULL OR a.customerId = :customerId)
-                                   AND (:dataInicio IS NULL OR a.dataHora >= :dataInicio)
-                                   AND (:dataFim    IS NULL OR a.dataHora <= :dataFim)
-                        ORDER BY a.dataHora DESC
-            """)
+    @Query(value = """
+            SELECT * FROM auditoria_consulta
+            WHERE (CAST(:customerId AS varchar) IS NULL OR customer_id = :customerId)
+            AND (CAST(:dataInicio AS timestamp) IS NULL OR data_hora >= CAST(:dataInicio AS timestamp))
+            AND (CAST(:dataFim AS timestamp) IS NULL OR data_hora <= CAST(:dataFim AS timestamp))
+            ORDER BY data_hora DESC
+            """,
+            countQuery = """
+            SELECT COUNT(*) FROM auditoria_consulta
+            WHERE (CAST(:customerId AS varchar) IS NULL OR customer_id = :customerId)
+            AND (CAST(:dataInicio AS timestamp) IS NULL OR data_hora >= CAST(:dataInicio AS timestamp))
+            AND (CAST(:dataFim AS timestamp) IS NULL OR data_hora <= CAST(:dataFim AS timestamp))
+            """,
+            nativeQuery = true)
     Page<AuditoriaConsulta> findByFilters(
             @Param("customerId") String customerId,
             @Param("dataInicio") LocalDateTime dataInicio,
