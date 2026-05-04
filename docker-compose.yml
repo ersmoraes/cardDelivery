@@ -140,6 +140,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       CEP_API_URL: http://wiremock:8080
       AWS_ENDPOINT: http://localstack:4566
+      TZ: America/Sao_Paulo
+      JAVA_TOOL_OPTIONS: "-Duser.timezone=America/Sao_Paulo"
     depends_on:
       postgres:
         condition: service_healthy
