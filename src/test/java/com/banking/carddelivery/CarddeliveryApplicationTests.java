@@ -2,8 +2,9 @@ package com.banking.carddelivery;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @SpringBootTest(properties = {
@@ -11,15 +12,18 @@ import software.amazon.awssdk.services.s3.S3Client;
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
     "spring.flyway.enabled=false",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.rabbitmq.listener.simple.auto-startup=false",
+    "spring.rabbitmq.listener.direct.auto-startup=false"
 })
 @ActiveProfiles("test")
+@SuppressWarnings("unused")
 class CarddeliveryApplicationTests {
 
-    @MockBean
-    org.springframework.amqp.rabbit.connection.ConnectionFactory connectionFactory;
+    @MockitoBean
+    ConnectionFactory connectionFactory;
 
-    @MockBean
+    @MockitoBean
     S3Client s3Client;
 
     @Test
