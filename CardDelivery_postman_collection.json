@@ -1,0 +1,926 @@
+{
+ "info": {
+ "name": "CardDelivery API",
+ "description": "# CardDelivery API -- Coleção de Testes\n\nColeção completa para testar a API de avaliação de entrega de cartões bancários.\n\n---\n\n## Pré-requisitos\n\nAntes de começar, certifique-se de que os seguintes serviços estão rodando:\n\n- **Docker Compose** com os containers: `postgres`, `rabbitmq`, `wiremock`, `localstack`\n- **Aplicação Spring Boot** na porta `8082`\n- **WireMock** na porta `8081` (responsável pelos stubs de CEP via ViaCEP)\n\n---\n\n## Variáveis da Collection\n\n| Variável | Valor padrão |\n|---|---|\n| `base_url` | http://localhost:8082 |\n| `wiremock_url` | http://localhost:8081 |\n\n---\n\n## Estrutura das Pastas\n\n1. **Avaliação de Entrega** -- Fluxo principal: verifica se o cartão pode ser entregue no CEP informado\n2. **Agências Próximas** -- Busca agências bancárias próximas a um CEP\n3. **Regiões de Atendimento** -- Gerenciamento das regiões e perfis de risco\n4. **Auditoria de Consultas** -- Histórico e rastreabilidade das avaliações realizadas\n5. **Health & Actuator** -- Monitoramento e saúde da aplicação\n6. **WireMock -- Stubs ViaCEP** -- Verificação direta dos stubs configurados no mock\n\n---\n\n> **Dica:** Execute as requisições na ordem das pastas para simular um fluxo real de uso.",
+ "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+ },
+ "variable": [
+ {
+ "key": "base_url",
+ "value": "http://localhost:8082",
+ "type": "string",
+ "description": "URL base da aplicação Spring Boot"
+ },
+ {
+ "key": "wiremock_url",
+ "value": "http://localhost:8081",
+ "type": "string",
+ "description": "URL base do WireMock (mock do ViaCEP)"
+ }
+ ],
+ "item": [
+
+ {
+ "name": "1. Avaliação de Entrega",
+ "description": "## Avaliação de Entrega de Cartões\n\n**Endpoint:** `POST /api/cards/delivery/evaluate`\n\nAvalia se um cartão bancário pode ser entregue no endereço informado, com base no CEP, tipo de cartão e perfil de risco da região.\n\n### Resultado possíveis\n- `APROVADO` -- Entrega liberada (domiciliar ou via transportadora)\n- `RETIRADA_AGENCIA` -- Região de alto risco; o cliente precisa retirar na agência\n\n### Campos do body\n| Campo | Tipo | Obrigatório | Descrição |\n|---|---|---|---|\n| `cep` | string | | CEP do destinatário (com ou sem hífen) |\n| `cardType` | enum | | Tipo do cartão: `CREDIT`, `DEBIT`, `MULTIPLE`, `BLACK` |\n| `customerId` | string | | ID do cliente (formato: `C` seguido de números) |",
+ "item": [
+
+ {
+ "name": "Cartão de Crédito aprovado -- SP (baixo risco)",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"01310100\",\n \"cardType\": \"CREDIT\",\n \"customerId\": \"C123456\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Avalia a entrega de um cartão de **crédito** para um CEP de São Paulo (baixo risco).\n\n**Resultado esperado:** `APROVADO` -- entrega domiciliar disponível."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Cartão de Débito aprovado -- SP (baixo risco)",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"01310100\",\n \"cardType\": \"DEBIT\",\n \"customerId\": \"C123456\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Avalia a entrega de um cartão de **débito** para o mesmo CEP de São Paulo.\n\n**Resultado esperado:** `APROVADO` -- entrega domiciliar disponível."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Cartão Múltiplo aprovado -- SP (baixo risco)",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"01310100\",\n \"cardType\": \"MULTIPLE\",\n \"customerId\": \"C123456\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Avalia a entrega de um cartão **múltiplo** (débito + crédito) para o CEP de São Paulo.\n\n**Resultado esperado:** `APROVADO` -- entrega domiciliar disponível."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Cartão Black aprovado -- SP (transportadora segura)",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"01310100\",\n \"cardType\": \"BLACK\",\n \"customerId\": \"C123456\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Avalia a entrega de um cartão **Black** (premium) para São Paulo. Cartões Black são sempre enviados via transportadora segura.\n\n**Resultado esperado:** `APROVADO` -- entrega via transportadora segura."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Cartão de Crédito aprovado -- RJ (médio risco, via transportadora)",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"20040020\",\n \"cardType\": \"CREDIT\",\n \"customerId\": \"C654321\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Avalia a entrega de um cartão de **crédito** para o Rio de Janeiro Centro (médio risco).\n\n**Resultado esperado:** `APROVADO` -- entrega liberada, mas obrigatoriamente via transportadora."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Cartão de Crédito -- Retirada na agência (Manaus, alto risco)",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"69900000\",\n \"cardType\": \"CREDIT\",\n \"customerId\": \"C999001\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Avalia a entrega de um cartão de **crédito** para Manaus (AM), região classificada como alto risco.\n\n**Resultado esperado:** `RETIRADA_AGENCIA` -- entrega domiciliar não permitida; o cliente deverá retirar o cartão na agência."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Cartão Black -- Retirada na agência (Manaus, alto risco tem precedência)",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"69900000\",\n \"cardType\": \"BLACK\",\n \"customerId\": \"C999002\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Valida que mesmo cartões **Black** (premium) não são entregues em regiões de alto risco. O perfil de risco da região tem precedência sobre o tipo do cartão.\n\n**Resultado esperado:** `RETIRADA_AGENCIA`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "CEP com hífen -- normalização automática",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"01310-100\",\n \"cardType\": \"CREDIT\",\n \"customerId\": \"C123456\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Verifica que a API aceita e normaliza CEPs enviados **com hífen** (`01310-100`), tratando-os da mesma forma que `01310100`.\n\n**Resultado esperado:** `APROVADO` -- mesmo comportamento do CEP sem hífen."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 400 -- CEP com formato inválido",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"ABCDE123\",\n \"cardType\": \"CREDIT\",\n \"customerId\": \"C123456\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Testa a validação do campo `cep` enviando letras no lugar de dígitos.\n\n**Resultado esperado:** `400 Bad Request` com mensagem de erro descrevendo o formato inválido do CEP."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 400 -- customerId com formato inválido",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"01310100\",\n \"cardType\": \"CREDIT\",\n \"customerId\": \"INVALIDO\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Testa a validação do campo `customerId` com um valor fora do padrão esperado (deve começar com `C` seguido de números).\n\n**Resultado esperado:** `400 Bad Request`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 400 -- Body sem nenhum campo",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Testa o comportamento da API quando nenhum campo obrigatório é enviado no body.\n\n**Resultado esperado:** `400 Bad Request` com lista de todos os campos obrigatórios ausentes."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 404 -- CEP não encontrado no ViaCEP",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"00000000\",\n \"cardType\": \"CREDIT\",\n \"customerId\": \"C123456\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Testa o comportamento quando o CEP informado não existe. O WireMock está configurado para retornar `erro: true` para o CEP `00000000`.\n\n**Resultado esperado:** `404 Not Found`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 503 -- Serviço de CEP indisponível",
+ "request": {
+ "method": "POST",
+ "header": [
+ {
+ "key": "Content-Type",
+ "value": "application/json"
+ }
+ ],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/evaluate",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "evaluate"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"cep\": \"99999999\",\n \"cardType\": \"CREDIT\",\n \"customerId\": \"C123456\"\n}",
+ "options": {
+ "raw": { "language": "json" }
+ }
+ },
+ "description": "Simula uma falha no serviço externo de consulta de CEP. O WireMock retorna `500 Internal Server Error` para o CEP `99999999`.\n\n**Resultado esperado:** `503 Service Unavailable` -- a API deve tratar o erro externo graciosamente."
+ },
+ "response": []
+ }
+
+ ]
+ },
+
+ {
+ "name": "2. Agências Próximas",
+ "description": "## Agências Próximas\n\n**Endpoint:** `GET /api/cards/delivery/branches/nearby?cep={cep}`\n\nRetorna a lista de agências bancárias mais próximas ao CEP informado. Utilizado principalmente quando o resultado da avaliação é `RETIRADA_AGENCIA`, para orientar o cliente sobre onde buscar o cartão.",
+ "item": [
+
+ {
+ "name": "Agências próximas -- São Paulo (01310100)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/branches/nearby?cep=01310100",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "branches", "nearby"],
+ "query": [{ "key": "cep", "value": "01310100", "description": "CEP da Av. Paulista, SP" }]
+ },
+ "description": "Busca agências próximas ao CEP `01310100` (Av. Paulista, São Paulo).\n\n**Resultado esperado:** Lista de agências com nome, endereço e distância."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Agências próximas -- Rio de Janeiro (20040020)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/branches/nearby?cep=20040020",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "branches", "nearby"],
+ "query": [{ "key": "cep", "value": "20040020", "description": "CEP do Centro do Rio de Janeiro" }]
+ },
+ "description": "Busca agências próximas ao CEP `20040020` (Centro do Rio de Janeiro).\n\n**Resultado esperado:** Lista de agências disponíveis na região."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Agências próximas -- Manaus (69900000)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/branches/nearby?cep=69900000",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "branches", "nearby"],
+ "query": [{ "key": "cep", "value": "69900000", "description": "CEP de Manaus, AM (alto risco)" }]
+ },
+ "description": "Busca agências próximas ao CEP `69900000` (Manaus, AM). Cenário importante, pois esta é uma região de alto risco onde a retirada em agência é obrigatória.\n\n**Resultado esperado:** Lista de agências em Manaus."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Agências próximas -- CEP com hífen (normalização)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/branches/nearby?cep=01310-100",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "branches", "nearby"],
+ "query": [{ "key": "cep", "value": "01310-100", "description": "CEP enviado com hífen" }]
+ },
+ "description": "Verifica que o endpoint também normaliza CEPs **com hífen** no parâmetro de query.\n\n**Resultado esperado:** Mesmo retorno que `01310100`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 400 -- CEP inválido na query",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/branches/nearby?cep=INVALIDO",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "branches", "nearby"],
+ "query": [{ "key": "cep", "value": "INVALIDO" }]
+ },
+ "description": "Testa a validação do parâmetro `cep` na query string.\n\n**Resultado esperado:** `400 Bad Request`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Lista vazia -- CEP sem agências cadastradas (Curitiba)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/cards/delivery/branches/nearby?cep=80010010",
+ "host": ["{{base_url}}"],
+ "path": ["api", "cards", "delivery", "branches", "nearby"],
+ "query": [{ "key": "cep", "value": "80010010", "description": "CEP de Curitiba sem agências mapeadas" }]
+ },
+ "description": "Testa o cenário em que nenhuma agência está cadastrada para a região do CEP informado.\n\n**Resultado esperado:** `200 OK` com lista vazia `[]`."
+ },
+ "response": []
+ }
+
+ ]
+ },
+
+ {
+ "name": "3. Regiões de Atendimento",
+ "description": "## Regiões de Atendimento\n\n**Endpoints:**\n- `GET /api/regions` -- Lista todas as regiões ativas (paginado)\n- `POST /api/regions` -- Cadastra uma nova região de atendimento\n\nAs regiões definem o perfil de risco, prazo de entrega e transportadora para faixas de CEP por UF.",
+ "item": [
+
+ {
+ "name": "Listar todas as regiões -- página 1 (10 por página)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/regions?page=0&size=10",
+ "host": ["{{base_url}}"],
+ "path": ["api", "regions"],
+ "query": [
+ { "key": "page", "value": "0", "description": "Índice da página (começa em 0)" },
+ { "key": "size", "value": "10", "description": "Quantidade de itens por página" }
+ ]
+ },
+ "description": "Retorna a primeira página de regiões cadastradas, com 10 itens por página.\n\n**Resultado esperado:** `200 OK` com lista paginada de regiões."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Listar regiões -- página 2 (3 por página)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/regions?page=1&size=3",
+ "host": ["{{base_url}}"],
+ "path": ["api", "regions"],
+ "query": [
+ { "key": "page", "value": "1", "description": "Segunda página" },
+ { "key": "size", "value": "3", "description": "Apenas 3 itens por página" }
+ ]
+ },
+ "description": "Testa a paginação com tamanho reduzido para verificar a navegação entre páginas.\n\n**Resultado esperado:** `200 OK` com até 3 regiões e metadados de paginação."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Listar regiões -- ordenadas por UF (A->Z)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/regions?sort=uf,asc",
+ "host": ["{{base_url}}"],
+ "path": ["api", "regions"],
+ "query": [{ "key": "sort", "value": "uf,asc", "description": "Ordena por UF em ordem alfabética" }]
+ },
+ "description": "Retorna as regiões ordenadas alfabeticamente pela UF (estado).\n\n**Resultado esperado:** `200 OK` com regiões ordenadas de `AC` a `TO`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Cadastrar nova região -- BA (risco MÉDIO)",
+ "request": {
+ "method": "POST",
+ "header": [{ "key": "Content-Type", "value": "application/json" }],
+ "url": {
+ "raw": "{{base_url}}/api/regions",
+ "host": ["{{base_url}}"],
+ "path": ["api", "regions"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"uf\": \"BA\",\n \"cepInicio\": \"40000000\",\n \"cepFim\": \"48999999\",\n \"perfilRisco\": \"MEDIO\",\n \"prazoDias\": 6,\n \"transportadora\": \"CORREIOS\",\n \"permiteEntrega\": true,\n \"ativo\": true\n}",
+ "options": { "raw": { "language": "json" } }
+ },
+ "description": "Cadastra a região da **Bahia** com perfil de risco médio, prazo de 6 dias via Correios.\n\n**Resultado esperado:** `201 Created` com os dados da região criada."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Cadastrar região -- CE (campos opcionais omitidos)",
+ "request": {
+ "method": "POST",
+ "header": [{ "key": "Content-Type", "value": "application/json" }],
+ "url": {
+ "raw": "{{base_url}}/api/regions",
+ "host": ["{{base_url}}"],
+ "path": ["api", "regions"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"uf\": \"CE\",\n \"cepInicio\": \"60000000\",\n \"cepFim\": \"63999999\",\n \"perfilRisco\": \"ALTO\",\n \"prazoDias\": 0\n}",
+ "options": { "raw": { "language": "json" } }
+ },
+ "description": "Cadastra o **Ceará** sem enviar `permiteEntrega` e `ativo`, validando que a API aplica os valores padrão (`true`) corretamente.\n\n**Resultado esperado:** `201 Created` com `permiteEntrega: true` e `ativo: true`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 400 -- perfilRisco ausente",
+ "request": {
+ "method": "POST",
+ "header": [{ "key": "Content-Type", "value": "application/json" }],
+ "url": {
+ "raw": "{{base_url}}/api/regions",
+ "host": ["{{base_url}}"],
+ "path": ["api", "regions"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"uf\": \"SC\",\n \"cepInicio\": \"88000000\",\n \"cepFim\": \"89999999\",\n \"prazoDias\": 4\n}",
+ "options": { "raw": { "language": "json" } }
+ },
+ "description": "Tenta cadastrar uma região sem o campo obrigatório `perfilRisco`.\n\n**Resultado esperado:** `400 Bad Request` indicando que `perfilRisco` é obrigatório."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 400 -- prazoDias com valor negativo",
+ "request": {
+ "method": "POST",
+ "header": [{ "key": "Content-Type", "value": "application/json" }],
+ "url": {
+ "raw": "{{base_url}}/api/regions",
+ "host": ["{{base_url}}"],
+ "path": ["api", "regions"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{\n \"uf\": \"SC\",\n \"cepInicio\": \"88000000\",\n \"cepFim\": \"89999999\",\n \"perfilRisco\": \"BAIXO\",\n \"prazoDias\": -1\n}",
+ "options": { "raw": { "language": "json" } }
+ },
+ "description": "Testa a validação de range no campo `prazoDias`. Prazo negativo não faz sentido de negócio e deve ser rejeitado.\n\n**Resultado esperado:** `400 Bad Request` indicando que `prazoDias` deve ser >= 0."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Erro 400 -- Body completamente vazio",
+ "request": {
+ "method": "POST",
+ "header": [{ "key": "Content-Type", "value": "application/json" }],
+ "url": {
+ "raw": "{{base_url}}/api/regions",
+ "host": ["{{base_url}}"],
+ "path": ["api", "regions"]
+ },
+ "body": {
+ "mode": "raw",
+ "raw": "{}",
+ "options": { "raw": { "language": "json" } }
+ },
+ "description": "Envia um body vazio para verificar a resposta de validação com todos os campos ausentes.\n\n**Resultado esperado:** `400 Bad Request` listando todos os campos obrigatórios em falta."
+ },
+ "response": []
+ }
+
+ ]
+ },
+
+ {
+ "name": "4. Auditoria de Consultas",
+ "description": "## Auditoria de Consultas\n\n**Endpoints:**\n- `GET /api/audit/queries` -- Consulta paginada com filtros por cliente e data\n- `GET /api/audit/queries/{cep}` -- Histórico de consultas para um CEP específico\n\nPermite rastrear todas as avaliações de entrega realizadas, fundamental para análise de comportamento e suporte ao cliente.",
+ "item": [
+
+ {
+ "name": "Listar todas as auditorias (sem filtro)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/audit/queries?page=0&size=20",
+ "host": ["{{base_url}}"],
+ "path": ["api", "audit", "queries"],
+ "query": [
+ { "key": "page", "value": "0" },
+ { "key": "size", "value": "20" }
+ ]
+ },
+ "description": "Retorna todas as consultas de auditoria sem nenhum filtro aplicado, paginadas com 20 itens por página.\n\n**Resultado esperado:** `200 OK` com lista paginada de todas as avaliações realizadas."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Filtrar por cliente -- C123456",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/audit/queries?customerId=C123456",
+ "host": ["{{base_url}}"],
+ "path": ["api", "audit", "queries"],
+ "query": [{ "key": "customerId", "value": "C123456", "description": "ID do cliente a ser pesquisado" }]
+ },
+ "description": "Filtra o histórico de auditoria para exibir apenas as consultas do cliente `C123456`.\n\n**Resultado esperado:** `200 OK` com todas as avaliações feitas por este cliente."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Filtrar por intervalo de datas -- ano de 2026",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/audit/queries?dataInicio=2026-01-01T00:00:00&dataFim=2026-12-31T23:59:59",
+ "host": ["{{base_url}}"],
+ "path": ["api", "audit", "queries"],
+ "query": [
+ { "key": "dataInicio", "value": "2026-01-01T00:00:00", "description": "Data inicial do filtro (ISO 8601)" },
+ { "key": "dataFim", "value": "2026-12-31T23:59:59", "description": "Data final do filtro (ISO 8601)" }
+ ]
+ },
+ "description": "Filtra as consultas realizadas durante todo o ano de **2026**.\n\n**Resultado esperado:** `200 OK` com consultas dentro do intervalo de datas."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Filtrar por cliente + data início",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/audit/queries?customerId=C123456&dataInicio=2026-01-01T00:00:00",
+ "host": ["{{base_url}}"],
+ "path": ["api", "audit", "queries"],
+ "query": [
+ { "key": "customerId", "value": "C123456" },
+ { "key": "dataInicio", "value": "2026-01-01T00:00:00" }
+ ]
+ },
+ "description": "Combina os filtros de cliente e data para uma busca mais específica.\n\n**Resultado esperado:** `200 OK` com consultas do cliente `C123456` a partir de 01/01/2026."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Histórico por CEP -- São Paulo Paulista (01310100)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/audit/queries/01310100",
+ "host": ["{{base_url}}"],
+ "path": ["api", "audit", "queries", "01310100"]
+ },
+ "description": "Retorna todas as consultas de avaliação realizadas para o CEP `01310100` (Av. Paulista, SP).\n\n**Resultado esperado:** `200 OK` com histórico de avaliações para este CEP."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Histórico por CEP -- Manaus (69900000)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/audit/queries/69900000",
+ "host": ["{{base_url}}"],
+ "path": ["api", "audit", "queries", "69900000"]
+ },
+ "description": "Retorna o histórico de consultas para o CEP de **Manaus** (alto risco). Útil para verificar quantos clientes foram redirecionados para agência.\n\n**Resultado esperado:** `200 OK` com histórico de avaliações."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Histórico por CEP -- sem registros (11111111)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/api/audit/queries/11111111",
+ "host": ["{{base_url}}"],
+ "path": ["api", "audit", "queries", "11111111"]
+ },
+ "description": "Testa o cenário em que um CEP nunca foi consultado, verificando que a API retorna lista vazia em vez de erro.\n\n**Resultado esperado:** `200 OK` com lista vazia `[]`."
+ },
+ "response": []
+ }
+
+ ]
+ },
+
+ {
+ "name": "5. Health & Actuator",
+ "description": "##  Monitoramento da Aplicação\n\nEndpoints do Spring Boot Actuator para verificar o status, informações e métricas da aplicação.\n\n> Estes endpoints são úteis para pipelines de CI/CD e monitoramento em produção.",
+ "item": [
+
+ {
+ "name": "Health check -- Status da aplicação",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/actuator/health",
+ "host": ["{{base_url}}"],
+ "path": ["actuator", "health"]
+ },
+ "description": "Verifica se a aplicação está saudável, incluindo status dos componentes como banco de dados, RabbitMQ e outros.\n\n**Resultado esperado:** `200 OK` com `status: \"UP\"`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Info -- Informações da aplicação",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/actuator/info",
+ "host": ["{{base_url}}"],
+ "path": ["actuator", "info"]
+ },
+ "description": "Retorna informações gerais sobre a aplicação, como versão, nome e dados do build.\n\n**Resultado esperado:** `200 OK` com metadados da aplicação."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Métricas -- Visão geral das métricas disponíveis",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{base_url}}/actuator/metrics",
+ "host": ["{{base_url}}"],
+ "path": ["actuator", "metrics"]
+ },
+ "description": "Lista todas as métricas disponíveis (JVM, HTTP, banco de dados, etc.).\n\n**Resultado esperado:** `200 OK` com lista de métricas exportadas pelo Actuator."
+ },
+ "response": []
+ }
+
+ ]
+ },
+
+ {
+ "name": "6. WireMock -- Stubs ViaCEP",
+ "description": "## WireMock -- Stubs do ViaCEP\n\n**Base URL:** `{{wiremock_url}}` (porta 8081)\n\nConsultas diretas ao WireMock para verificar os stubs configurados do serviço de CEP (ViaCEP). Útil para depurar comportamentos inesperados na integração.\n\n### Stubs configurados\n| CEP | Comportamento |\n|---|---|\n| `01310100` | Retorna dados de SP (baixo risco) |\n| `20040020` | Retorna dados do RJ (médio risco) |\n| `69900000` | Retorna dados de Manaus (alto risco) |\n| `00000000` | Retorna `erro: true` (CEP inexistente) |\n| `99999999` | Retorna HTTP 500 (falha no serviço) |",
+ "item": [
+
+ {
+ "name": "Stub -- SP Paulista (01310100)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{wiremock_url}}/ws/01310100/json/",
+ "host": ["{{wiremock_url}}"],
+ "path": ["ws", "01310100", "json", ""]
+ },
+ "description": "Consulta direta ao stub do WireMock para o CEP `01310100`.\n\n**Resultado esperado:** JSON com os dados de São Paulo (baixo risco)."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Stub -- RJ Centro (20040020)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{wiremock_url}}/ws/20040020/json/",
+ "host": ["{{wiremock_url}}"],
+ "path": ["ws", "20040020", "json", ""]
+ },
+ "description": "Consulta direta ao stub do WireMock para o CEP `20040020`.\n\n**Resultado esperado:** JSON com os dados do Rio de Janeiro (médio risco)."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Stub -- Manaus (69900000)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{wiremock_url}}/ws/69900000/json/",
+ "host": ["{{wiremock_url}}"],
+ "path": ["ws", "69900000", "json", ""]
+ },
+ "description": "Consulta direta ao stub do WireMock para o CEP `69900000`.\n\n**Resultado esperado:** JSON com os dados de Manaus (alto risco)."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Stub -- CEP inexistente, erro: true (00000000)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{wiremock_url}}/ws/00000000/json/",
+ "host": ["{{wiremock_url}}"],
+ "path": ["ws", "00000000", "json", ""]
+ },
+ "description": "Consulta o stub configurado para simular um CEP que não existe no ViaCEP.\n\n**Resultado esperado:** JSON com `erro: true`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Stub -- Falha no servidor, HTTP 500 (99999999)",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{wiremock_url}}/ws/99999999/json/",
+ "host": ["{{wiremock_url}}"],
+ "path": ["ws", "99999999", "json", ""]
+ },
+ "description": "Consulta o stub configurado para simular uma falha interna do servidor ViaCEP.\n\n**Resultado esperado:** `500 Internal Server Error`."
+ },
+ "response": []
+ },
+
+ {
+ "name": "Admin -- Listar todos os stubs cadastrados",
+ "request": {
+ "method": "GET",
+ "header": [],
+ "url": {
+ "raw": "{{wiremock_url}}/__admin/mappings",
+ "host": ["{{wiremock_url}}"],
+ "path": ["__admin", "mappings"]
+ },
+ "description": "Acessa o painel admin do WireMock para listar todos os mapeamentos (stubs) configurados.\n\n**Resultado esperado:** `200 OK` com a lista completa de stubs ativos."
+ },
+ "response": []
+ }
+
+ ]
+ }
+
+ ]
+}
