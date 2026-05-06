@@ -73,7 +73,7 @@ class S3BackupPublisherTest {
     }
 
     @Test
-    void publicar_s3Fails_throwsServicoExternoIndisponivelException() throws Exception {
+    void publicar_s3Fails_throwsServicoExternoIndisponivelExceptionWithContext() throws Exception {
         DeliveryEvaluatedEvent event = buildEvent("abc123", LocalDateTime.of(2024, 6, 15, 10, 0));
         when(objectMapper.writeValueAsBytes(event)).thenReturn("{}".getBytes());
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
@@ -81,16 +81,21 @@ class S3BackupPublisherTest {
 
         assertThatThrownBy(() -> publisher.publicar(event))
                 .isInstanceOf(ServicoExternoIndisponivelException.class)
-                .hasMessageContaining("backup em S3");
+                .hasMessageContaining("backup em S3")
+                .hasMessageContaining("eventId=abc123")
+                .hasMessageContaining("key=2024/06/15/abc123.json")
+                .hasCauseInstanceOf(RuntimeException.class);
     }
 
     @Test
-    void publicar_serializationFails_throwsServicoExternoIndisponivelException() throws Exception {
+    void publicar_serializationFails_throwsServicoExternoIndisponivelExceptionWithContext() throws Exception {
         DeliveryEvaluatedEvent event = buildEvent("abc123", LocalDateTime.of(2024, 6, 15, 10, 0));
         when(objectMapper.writeValueAsBytes(event)).thenThrow(new JsonProcessingException("error") {});
 
         assertThatThrownBy(() -> publisher.publicar(event))
-                .isInstanceOf(ServicoExternoIndisponivelException.class);
+                .isInstanceOf(ServicoExternoIndisponivelException.class)
+                .hasMessageContaining("eventId=abc123")
+                .hasCauseInstanceOf(JsonProcessingException.class);
     }
 
     private DeliveryEvaluatedEvent buildEvent(String eventId, LocalDateTime ocorridoEm) {

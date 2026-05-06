@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final String TIMESTAMP = "timestamp";
 
     @ExceptionHandler(CepInvalidoException.class)
     public ResponseEntity<ProblemDetail> handleCepInvalido(CepInvalidoException ex) {
@@ -27,7 +28,7 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         pd.setType(URI.create("urn:carddelivery:cep-invalido"));
         pd.setTitle("CEP Inválido");
-        pd.setProperty("timestamp", Instant.now());
+        pd.setProperty(TIMESTAMP, Instant.now());
         return ResponseEntity.badRequest().body(pd);
     }
 
@@ -37,7 +38,7 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         pd.setType(URI.create("urn:carddelivery:cep-nao-encontrado"));
         pd.setTitle("CEP Não Encontrado");
-        pd.setProperty("timestamp", Instant.now());
+        pd.setProperty(TIMESTAMP, Instant.now());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);
     }
 
@@ -47,7 +48,7 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         pd.setType(URI.create("urn:carddelivery:card-type-invalido"));
         pd.setTitle("Tipo de Cartão Inválido");
-        pd.setProperty("timestamp", Instant.now());
+        pd.setProperty(TIMESTAMP, Instant.now());
         return ResponseEntity.badRequest().body(pd);
     }
 
@@ -57,7 +58,7 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
         pd.setType(URI.create("urn:carddelivery:servico-indisponivel"));
         pd.setTitle("Serviço Externo Indisponível");
-        pd.setProperty("timestamp", Instant.now());
+        pd.setProperty(TIMESTAMP, Instant.now());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(pd);
     }
 
@@ -70,7 +71,7 @@ public class GlobalExceptionHandler {
         pd.setType(URI.create("urn:carddelivery:validacao"));
         pd.setTitle("Erro de Validação");
         pd.setProperty("campos", errors);
-        pd.setProperty("timestamp", Instant.now());
+        pd.setProperty(TIMESTAMP, Instant.now());
         return ResponseEntity.badRequest().body(pd);
     }
 
@@ -81,7 +82,7 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
         pd.setType(URI.create("urn:carddelivery:tipo-invalido"));
         pd.setTitle("Tipo de Parâmetro Inválido");
-        pd.setProperty("timestamp", Instant.now());
+        pd.setProperty(TIMESTAMP, Instant.now());
         return ResponseEntity.badRequest().body(pd);
     }
 
@@ -91,7 +92,7 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno inesperado");
         pd.setType(URI.create("urn:carddelivery:erro-interno"));
         pd.setTitle("Erro Interno");
-        pd.setProperty("timestamp", Instant.now());
+        pd.setProperty(TIMESTAMP, Instant.now());
         return ResponseEntity.internalServerError().body(pd);
     }
 }
