@@ -46,9 +46,8 @@ public class S3BackupPublisher implements BackupPublisher {
             s3Client.putObject(request, RequestBody.fromBytes(content));
             log.info("Backup S3 publicado: s3://{}/{}", bucket, key);
         } catch (Exception ex) {
-            log.error("Falha ao publicar backup S3 para eventId={} key={}: {}",
-                    event.getEventId(), key, ex.getMessage());
-            throw new ServicoExternoIndisponivelException("Falha ao publicar backup em S3", ex);
+            throw new ServicoExternoIndisponivelException(
+                    "Falha ao publicar backup em S3: eventId=" + event.getEventId() + " key=" + key, ex);
         }
     }
 

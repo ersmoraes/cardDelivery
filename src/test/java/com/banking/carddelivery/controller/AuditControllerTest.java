@@ -72,4 +72,12 @@ class AuditControllerTest {
         mockMvc.perform(get("/api/audit/queries").param("customerId", "C123456"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void queries_invalidDataInicio_returns400WithTimestamp() throws Exception {
+        mockMvc.perform(get("/api/audit/queries").param("dataInicio", "not-a-date"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.title").value("Tipo de Parâmetro Inválido"));
+    }
 }
