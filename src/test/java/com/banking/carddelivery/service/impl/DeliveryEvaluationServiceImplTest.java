@@ -66,7 +66,7 @@ class DeliveryEvaluationServiceImplTest {
         when(cepProvider.buscarEndereco(normalizedCep)).thenReturn(endereco);
         when(regiaoRepository.findByCep(normalizedCep)).thenReturn(Optional.of(regiao));
         when(evaluator.aplicaPara(CardType.DEBIT, regiao)).thenReturn(true);
-        when(evaluator.avaliar(eq(normalizedCep), eq(CardType.DEBIT), eq(endereco), eq(regiao))).thenReturn(expected);
+        when(evaluator.avaliar(normalizedCep, CardType.DEBIT, endereco, regiao)).thenReturn(expected);
 
         DeliveryEvaluationResponse result = service.evaluate(request);
 
